@@ -9,7 +9,7 @@ Built to reflect content contract review work at an Amazon streaming subsidiary.
 ---
 
 ## Live Demo
-Open `src/index.html` → click **Load Sample Text** for an instant demo, or drop `fixtures/sample_content_license_agreement.pdf`.
+**[Try it live →](https://www.wong.cpa/ifrs15-contract-reviewer/src/)**. Or open `src/index.html` locally → click **Load Sample Text** for an instant demo, or drop `tests/fixtures/sample_content_license_agreement.pdf`.
 
 ---
 
@@ -36,9 +36,9 @@ ifrs15-contract-reviewer/
 │   ├── index.html              # Browser web app (PDF drop or text paste)
 │   └── contract_reviewer.py    # Python CLI (pdfplumber for PDF parsing)
 ├── tests/
-│   └── test_contract_reviewer.py  # pytest suite — 11 rules, risk levels, integration
-├── fixtures/
-│   └── sample_content_license_agreement.pdf  # Synthetic streaming content contract
+│   ├── test_contract_reviewer.py  # pytest suite — 11 rules, risk levels, integration
+│   └── fixtures/
+│       └── sample_content_license_agreement.pdf  # Synthetic streaming content contract
 ├── requirements.txt
 ├── .gitignore
 └── LICENSE
@@ -56,7 +56,7 @@ git clone https://github.com/wongcpa/ifrs15-contract-reviewer.git
 cd ifrs15-contract-reviewer
 pip install pdfplumber
 python src/contract_reviewer.py
-# Enter: fixtures/sample_content_license_agreement.pdf
+# Enter: tests/fixtures/sample_content_license_agreement.pdf
 ```
 
 **Tests:** `pip install pytest && pytest tests/ -v`
