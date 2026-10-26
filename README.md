@@ -71,7 +71,7 @@ python src/contract_reviewer.py
 | IFRS15-S2-01 | Bundled / multi-element arrangement | HIGH |
 | IFRS15-S2-02 | Content license right-of-access vs. right-of-use | HIGH |
 | IFRS15-S3-01 | Variable consideration (royalties, milestones, per-stream) | HIGH |
-| IFRS15-S3-02 | Significant financing component (Net 180/270/360+) | MEDIUM |
+| IFRS15-S3-02 | Significant financing component (terms beyond 12 months; IFRS 15.63 practical expedient applied) | MEDIUM |
 | IFRS15-S3-03 | Non-cash / in-kind consideration | MEDIUM |
 | IFRS15-S4-01 | Discount allocation on bundled contracts | LOW |
 | IFRS15-S5-01 | Over-time recognition (ratable, subscription) | LOW |
