@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contract Revenue Reviewer</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fafaf8;--paper:#ffffff;--ink:#1c1917;--navy:#1e3a5f;
+  --red:#b91c1c;--amber:#b45309;--green:#166534;
+  --red-bg:#fef2f2;--amber-bg:#fffbeb;--green-bg:#f0fdf4;
+  --red-border:#fecaca;--amber-border:#fde68a;--green-border:#bbf7d0;
+  --rule:#e5e0d8;--muted:#78716c;--surface:#f5f3ef;
+  --mono:'IBM Plex Mono',monospace;--serif:'Libre Baskerville',Georgia,serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px;min-height:100vh;line-height:1.65}
+
+header{background:var(--navy);padding:1.5rem 2.5rem;display:flex;align-items:flex-start;justify-content:space-between}
+.logo-text{font-family:var(--serif);font-size:20px;font-weight:700;color:#fff;font-style:italic}
+.logo-sub{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:0.14em;text-transform:uppercase;margin-top:3px}
+.std-badges{display:flex;gap:8px;margin-top:4px}
+.std-badge{font-size:9px;letter-spacing:0.08em;padding:3px 8px;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.55);border-radius:2px}
+
+main{padding:2rem 2.5rem;max-width:1200px;margin:0 auto}
+
+/* ── INPUT AREA ── */
+.input-section{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:2rem}
+.input-panel{background:var(--paper);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.panel-head{background:var(--surface);padding:10px 16px;border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between}
+.panel-title{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.panel-meta{font-size:10px;color:var(--muted)}
+
+/* PDF drop zone */
+.pdf-drop{padding:2.5rem 2rem;text-align:center;cursor:pointer;transition:all 0.18s;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed transparent}
+.pdf-drop:hover,.pdf-drop.dragover{background:var(--surface);border-color:var(--rule)}
+.pdf-drop.has-file{background:var(--green-bg);border-color:var(--green-border)}
+.pdf-icon{font-family:var(--serif);font-size:36px;font-weight:700;font-style:italic;color:var(--rule);margin-bottom:10px}
+.pdf-title{font-size:13px;color:var(--ink);margin-bottom:5px}
+.pdf-sub{font-size:11px;color:var(--muted)}
+.pdf-sub span{color:var(--navy)}
+.pdf-loaded{font-size:12px;color:var(--green);margin-top:6px}
+
+/* Text area */
+.contract-textarea{width:100%;min-height:200px;font-family:var(--mono);font-size:11px;color:var(--ink);border:none;padding:14px 16px;background:var(--paper);resize:vertical;outline:none;line-height:1.7}
+.contract-textarea::placeholder{color:var(--muted)}
+.char-count{font-size:10px;color:var(--muted);padding:6px 16px;border-top:1px solid var(--rule);text-align:right}
+
+.controls{display:flex;gap:10px;margin-bottom:2rem;align-items:center;flex-wrap:wrap}
+.btn{font-family:var(--mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;padding:9px 22px;border-radius:2px;cursor:pointer;border:1px solid var(--rule);background:var(--paper);color:var(--muted);transition:all 0.15s}
+.btn:hover{border-color:var(--navy);color:var(--navy)}
+.btn-primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn-primary:hover{background:#2d5a8a;border-color:#2d5a8a}
+.btn-primary:disabled{background:var(--rule);color:var(--muted);border-color:var(--rule);cursor:not-allowed}
+.contract-name-input{font-family:var(--mono);font-size:11px;background:var(--paper);border:1px solid var(--rule);color:var(--ink);padding:8px 12px;border-radius:2px;outline:none;width:220px;transition:border-color 0.15s}
+.contract-name-input:focus{border-color:var(--navy)}
+
+/* ── RESULTS ── */
+.results-banner{background:var(--navy);color:#fff;padding:16px 24px;border-radius:4px;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between}
+.rb-title{font-family:var(--serif);font-size:16px;font-weight:700;font-style:italic}
+.rb-meta{font-size:10px;color:rgba(255,255,255,0.55);margin-top:3px;letter-spacing:0.06em}
+.rb-pills{display:flex;gap:8px}
+.risk-pill{font-size:11px;font-weight:500;padding:5px 14px;border-radius:2px;letter-spacing:0.04em}
+.pill-high{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.pill-med{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.pill-low{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+
+/* ── STEP SUMMARY ── */
+.step-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem}
+.step-card{background:var(--paper);border:1px solid var(--rule);border-radius:3px;padding:12px 14px;border-left:3px solid var(--rule)}
+.step-card.has-flags{border-left-color:var(--red)}
+.step-label{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.step-name{font-size:11px;color:var(--ink);font-weight:500;margin-bottom:3px}
+.step-status{font-size:10px}
+.step-status.flagged{color:var(--red)}
+.step-status.ok{color:var(--green)}
+
+/* ── FLAG CARDS ── */
+.flags-section{margin-bottom:1.5rem}
+.section-head{display:flex;align-items:center;gap:10px;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid var(--rule)}
+.section-head h2{font-family:var(--serif);font-size:15px;font-weight:700;font-style:italic;color:var(--ink)}
+.sh-count{font-size:10px;padding:2px 7px;background:var(--surface);border:1px solid var(--rule);border-radius:2px;color:var(--muted)}
+
+.flag-card{border:1px solid var(--rule);border-radius:4px;margin-bottom:12px;overflow:hidden}
+.flag-card.high{border-color:var(--red-border)}
+.flag-card.medium{border-color:var(--amber-border)}
+.flag-card.low{border-color:var(--green-border)}
+.fc-head{padding:12px 16px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--rule)}
+.fc-head.high{background:var(--red-bg)}.fc-head.medium{background:var(--amber-bg)}.fc-head.low{background:var(--green-bg)}
+.fc-risk{font-size:10px;letter-spacing:0.06em;text-transform:uppercase;padding:2px 8px;border-radius:2px;font-weight:500;flex-shrink:0;margin-top:2px}
+.fc-risk.high{background:var(--red-border);color:var(--red)}
+.fc-risk.medium{background:var(--amber-border);color:var(--amber)}
+.fc-risk.low{background:var(--green-border);color:var(--green)}
+.fc-info{flex:1}
+.fc-id{font-size:10px;color:var(--muted);letter-spacing:0.06em;margin-bottom:3px}
+.fc-name{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:3px}
+.fc-std{font-size:10px;color:var(--muted);font-style:italic}
+.fc-matches{font-size:10px;color:var(--muted);padding:3px 0;flex-shrink:0}
+.fc-body{padding:14px 16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;background:var(--paper)}
+.fc-section-label{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.fc-text{font-size:12px;color:var(--ink);line-height:1.65}
+.fc-excerpts{margin-top:10px}
+.excerpt{background:var(--surface);border-left:2px solid var(--rule);padding:8px 10px;font-size:11px;color:var(--muted);font-style:italic;margin-bottom:6px;line-height:1.6;border-radius:0 3px 3px 0}
+
+/* ── EMPTY ── */
+.empty-state{text-align:center;padding:3.5rem 2rem;color:var(--muted)}
+.empty-big{font-family:var(--serif);font-size:56px;font-weight:700;font-style:italic;color:var(--rule);margin-bottom:1rem}
+
+.disclaimer{font-size:10px;color:var(--muted);padding:1rem 2.5rem;border-top:1px solid var(--rule);letter-spacing:0.04em}
+@media(max-width:900px){.input-section{grid-template-columns:1fr}.step-summary{grid-template-columns:1fr 1fr}.fc-body{grid-template-columns:1fr}main{padding:1rem}}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo-text">Contract Revenue Reviewer</div>
+    <div class="logo-sub">IFRS 15 Five-Step Model · ASPE Section 3400 · Streaming Content</div>
+    <div class="std-badges">
+      <span class="std-badge">IFRS 15.9</span><span class="std-badge">ASC 606</span>
+      <span class="std-badge">IFRS 15.B34</span><span class="std-badge">ASPE 3400</span>
+      <span class="std-badge">100% Local</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<div class="input-section">
+  <!-- PDF drop -->
+  <div class="input-panel">
+    <div class="panel-head">
+      <div class="panel-title">Option A — Drop PDF (text extracted locally)</div>
+      <div class="panel-meta">pdfplumber not required in browser</div>
+    </div>
+    <div class="pdf-drop" id="pdf-drop" ondragover="pdov(event)" ondragleave="pdol()" ondrop="pdDrop(event)" onclick="document.getElementById('pdf-in').click()">
+      <div class="pdf-icon">§</div>
+      <div class="pdf-title">Drop a PDF contract here</div>
+      <div class="pdf-sub">Test fixture: <span>sample_content_license_agreement.pdf</span></div>
+      <div class="pdf-sub" style="margin-top:4px">Browser extracts text using PDF.js · no upload</div>
+      <div class="pdf-loaded" id="pdf-loaded" style="display:none"></div>
+    </div>
+    <input type="file" id="pdf-in" accept=".pdf" style="display:none" onchange="handlePDF(this)">
+  </div>
+
+  <!-- Text paste -->
+  <div class="input-panel">
+    <div class="panel-head">
+      <div class="panel-title">Option B — Paste Contract Text</div>
+      <div class="panel-meta">Copy from PDF, Word, or any source</div>
+    </div>
+    <textarea class="contract-textarea" id="contract-text" placeholder="Paste contract text here...&#10;&#10;The tool will scan for IFRS 15 revenue recognition risk patterns including:&#10;· Variable consideration (royalties, milestones, per-stream fees)&#10;· Bundled / multi-element arrangements&#10;· Principal vs. agent indicators&#10;· Acceptance conditions and right-of-access vs. right-of-use&#10;· Significant financing components (Net 270+)&#10;· Non-cash consideration&#10;" oninput="updateCharCount()"></textarea>
+    <div class="char-count" id="char-count">0 characters</div>
+  </div>
+</div>
+
+<div class="controls">
+  <input class="contract-name-input" id="contract-name" placeholder="Contract name (optional)" value="Sample Content License Agreement">
+  <button class="btn btn-primary" id="run-btn" onclick="runReview()">Review Contract</button>
+  <button class="btn" id="export-btn" style="display:none" onclick="exportCSV()">Export Flags CSV</button>
+  <button class="btn" onclick="loadSample()">Load Sample Text</button>
+</div>
+
+<!-- RESULTS -->
+<div id="results" style="display:none">
+  <div class="results-banner">
+    <div>
+      <div class="rb-title" id="rb-title">Contract Review</div>
+      <div class="rb-meta" id="rb-meta"></div>
+    </div>
+    <div class="rb-pills" id="rb-pills"></div>
+  </div>
+
+  <div class="step-summary" id="step-summary"></div>
+
+  <div id="flags-container"></div>
+</div>
+
+<div class="empty-state" id="empty-state">
+  <div class="empty-big">IFRS 15</div>
+  <div>Paste contract text or drop a PDF to scan for revenue recognition risks</div>
+</div>
+
+<div class="disclaimer">
+  All processing runs in your browser. No contract text is uploaded to any server. ·
+  Automated review only — final revenue recognition determination requires professional CPA judgment.
+</div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+// Configure PDF.js worker
+if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ── RULES ENGINE ──────────────────────────────────────────────────────────────
+const RULES=[
+  {id:'IFRS15-S1-01',name:'Contingent contract effectiveness',pattern:/\b(subject\s+to|contingent\s+upon|conditional\s+on|effective\s+only\s+if|conditioned\s+upon|upon\s+receipt\s+of\s+regulatory)\b/gi,standard:'IFRS 15.9 / ASPE 3400.06',risk:'HIGH',reason:'Contract effectiveness is contingent — may not meet IFRS 15 Step 1 criteria (collectability, commercial substance, approved terms).',guidance:'Assess all five IFRS 15.9 criteria before recognizing revenue. If conditional, defer recognition until conditions resolved.',step:'Step 1'},
+  {id:'IFRS15-S2-01',name:'Bundled / multi-element arrangement',pattern:/\b(bundle[d]?|package[d]?|combined\s+offering|multi.element|integrated\s+solution|all-inclusive|combined\s+license|bundled\s+package|multiple\s+deliverables)\b/gi,standard:'IFRS 15.22-30',risk:'HIGH',reason:'Bundled arrangement — requires identification and separation of distinct performance obligations.',guidance:"Apply IFRS 15.27 'distinct' test: (a) capable of being distinct, (b) distinct in context. Allocate transaction price using SSP.",step:'Step 2'},
+  {id:'IFRS15-S2-02',name:'Content license: right-of-access vs. right-of-use',pattern:/\b(streaming\s+rights|exclusive\s+license|non-exclusive\s+license|license\s+to\s+exhibit|broadcast\s+rights|distribution\s+rights|content\s+license|right-of-access)\b/gi,standard:'IFRS 15.B58-B62',risk:'HIGH',reason:'IP license detected. Must determine if right-of-access (over time) vs. right-of-use (point in time).',guidance:'Right-of-access applies if entity activities significantly affect the IP during the license period. Streaming content often qualifies.',step:'Step 2'},
+  {id:'IFRS15-S3-01',name:'Variable consideration',pattern:/\b(royalt(y|ies)|usage.based|per.view|per.stream|milestone\s+payment|performance.based|earn.out|success\s+fee|revenue\s+share|minimum\s+guarantee|MG|advance\s+against\s+royalties|escalat(e|ing|or)|tiered\s+pricing)\b/gi,standard:'IFRS 15.50-55',risk:'HIGH',reason:'Variable consideration detected. Must estimate using expected value or most likely amount; constrain if highly uncertain.',guidance:'IFRS 15.56: Include only to extent significant reversal is not probable. Apply royalty exception (B63) for sales-based royalties on IP.',step:'Step 3'},
+  {id:'IFRS15-S3-02',name:'Significant financing component',pattern:/\b(net\s+(180|270|360|365|540|720)|deferred\s+payment|payment\s+in\s+(\d+)\s+years?|long.term\s+payment)\b/gi,standard:'IFRS 15.60-65',risk:'MEDIUM',reason:'Extended payment terms suggest a significant financing component requiring adjustment to transaction price.',guidance:'If payment is >12 months from performance, adjust transaction price using a discount rate reflecting a separate financing transaction.',step:'Step 3'},
+  {id:'IFRS15-S3-03',name:'Non-cash consideration',pattern:/\b(barter|in.kind|equity\s+consideration|non.monetary|non.cash|promotional\s+services|in-kind\s+promotional)\b/gi,standard:'IFRS 15.66-69',risk:'MEDIUM',reason:'Non-cash consideration detected. Must measure at fair value at contract inception.',guidance:'If fair value cannot be estimated, measure indirectly by reference to the SSP of goods/services transferred.',step:'Step 3'},
+  {id:'IFRS15-S4-01',name:'Discount on bundled contracts',pattern:/\b(discount(ed)?|reduced\s+rate|package\s+discount|bundled\s+discount|combined\s+price)\b/gi,standard:'IFRS 15.81-83',risk:'LOW',reason:'Discount on bundled arrangement — must determine if it relates to all or specific performance obligations.',guidance:'Allocate proportionately unless observable evidence exists that discount relates to a specific POB subset.',step:'Step 4'},
+  {id:'IFRS15-S5-01',name:'Over-time recognition trigger',pattern:/\b(ratable(ly)?|straight.line|pro.rat(a|ed)|as\s+services\s+are\s+rendered|continuous\s+(access|service)|subscription|monthly\s+license\s+fee)\b/gi,standard:'IFRS 15.35',risk:'LOW',reason:'Over-time recognition language detected. Confirm criteria are met.',guidance:'Recognize over time only if customer simultaneously receives/consumes benefits, or entity has right to payment for performance to date.',step:'Step 5'},
+  {id:'IFRS15-S5-02',name:'Acceptance / delivery condition',pattern:/\b(upon\s+acceptance|client\s+acceptance|customer\s+sign.off|final\s+acceptance|acceptance\s+testing|UAT|go.live)\b/gi,standard:'IFRS 15.38',risk:'HIGH',reason:'Formal acceptance clause — revenue may be deferred until acceptance received.',guidance:'Assess whether acceptance is substantive. If yes, defer revenue until acceptance confirmed in writing.',step:'Step 5'},
+  {id:'IFRS15-B34',name:'Principal vs. agent indicator',pattern:/\b(agent|commission|net\s+settlement|pass.through|on\s+behalf\s+of|intermediary|resell(er)?|sub.licens(e|ing)|net\s+proceeds)\b/gi,standard:'IFRS 15.B34-B38',risk:'HIGH',reason:'Principal vs. agent indicators — gross vs. net revenue presentation at risk.',guidance:'Determine if entity controls the good/service before transfer. Sub-licensing arrangements require careful principal/agent analysis.',step:'Principal v Agent'},
+  {id:'ASPE3400-01',name:'Completed-contract method indicator',pattern:/\b(upon\s+completion|on\s+completion|when\s+project\s+is\s+complete|at\s+project\s+completion|final\s+delivery\s+only)\b/gi,standard:'ASPE 3400.19',risk:'MEDIUM',reason:'Completed-contract language. Under ASPE this may indicate completed-contract method is appropriate.',guidance:'ASPE 3400.19 allows completed-contract when outcome cannot be reliably estimated. IFRS 15 does not permit this method.',step:'ASPE 3400'},
+];
+
+const STEP_MAP={
+  'Step 1':['IFRS15-S1-01'],
+  'Step 2':['IFRS15-S2-01','IFRS15-S2-02'],
+  'Step 3':['IFRS15-S3-01','IFRS15-S3-02','IFRS15-S3-03'],
+  'Step 4':['IFRS15-S4-01'],
+  'Step 5':['IFRS15-S5-01','IFRS15-S5-02'],
+  'Principal v Agent':['IFRS15-B34'],
+  'ASPE 3400':['ASPE3400-01'],
+};
+const STEP_NAMES={'Step 1':'Identify Contract','Step 2':'Performance Obligations','Step 3':'Transaction Price','Step 4':'Allocate Price','Step 5':'Recognize Revenue','Principal v Agent':'Principal vs. Agent','ASPE 3400':'ASPE Considerations'};
+const RISK_ORDER={HIGH:0,MEDIUM:1,LOW:2};
+
+let lastFlags=[];
+
+// ── PDF HANDLING ──────────────────────────────────────────────────────────────
+function pdov(e){e.preventDefault();document.getElementById('pdf-drop').classList.add('dragover')}
+function pdol(){document.getElementById('pdf-drop').classList.remove('dragover')}
+function pdDrop(e){e.preventDefault();pdol();const f=e.dataTransfer.files[0];if(f)handlePDF({files:[f]})}
+
+function handlePDF(inp){
+  const file=inp.files[0];
+  if(!file)return;
+  if(!file.name.toLowerCase().endsWith('.pdf')){alert('Please drop a PDF file.');return}
+  if(typeof pdfjsLib==='undefined'){
+    alert('PDF.js not loaded. Please paste contract text in Option B instead.');return;
+  }
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      const arr=new Uint8Array(e.target.result);
+      const pdf=await pdfjsLib.getDocument({data:arr}).promise;
+      let text='';
+      for(let i=1;i<=pdf.numPages;i++){
+        const page=await pdf.getPage(i);
+        const content=await page.getTextContent();
+        text+='\n--- PAGE '+i+' ---\n'+content.items.map(s=>s.str).join(' ');
+      }
+      document.getElementById('contract-text').value=text;
+      updateCharCount();
+      document.getElementById('pdf-drop').classList.add('has-file');
+      document.getElementById('pdf-loaded').style.display='block';
+      document.getElementById('pdf-loaded').textContent=`✔ ${file.name} — ${pdf.numPages} page(s) extracted`;
+    }catch(err){
+      alert('Could not extract text from PDF. Try pasting contract text manually.\n'+err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function updateCharCount(){
+  const len=document.getElementById('contract-text').value.length;
+  document.getElementById('char-count').textContent=len.toLocaleString()+' characters';
+}
+
+// ── REVIEW ENGINE ─────────────────────────────────────────────────────────────
+function runReview(){
+  const text=document.getElementById('contract-text').value.trim();
+  if(text.length<50){alert('Please paste contract text (minimum 50 characters) or drop a PDF.');return}
+
+  const flags=[];
+  RULES.forEach(rule=>{
+    const matches=[...text.matchAll(rule.pattern)];
+    if(!matches.length)return;
+    const snippets=matches.slice(0,3).map(m=>{
+      const start=Math.max(0,m.index-65);
+      const end=Math.min(text.length,m.index+m[0].length+65);
+      return'...'+text.slice(start,end).replace(/\n/g,' ').trim()+'...';
+    });
+    flags.push({...rule,matchCount:matches.length,snippets});
+  });
+
+  lastFlags=flags;
+  renderResults(flags,document.getElementById('contract-name').value||'Contract');
+}
+
+function renderResults(flags,contractName){
+  document.getElementById('empty-state').style.display='none';
+  document.getElementById('results').style.display='block';
+  document.getElementById('export-btn').style.display='inline-flex';
+
+  const sorted=flags.slice().sort((a,b)=>RISK_ORDER[a.risk]-RISK_ORDER[b.risk]);
+  const high=flags.filter(f=>f.risk==='HIGH').length;
+  const med=flags.filter(f=>f.risk==='MEDIUM').length;
+  const low=flags.filter(f=>f.risk==='LOW').length;
+
+  document.getElementById('rb-title').textContent=contractName;
+  document.getElementById('rb-meta').textContent=`IFRS 15 / ASPE 3400 Review · ${new Date().toLocaleDateString()} · ${flags.length} flag${flags.length!==1?'s':''} detected`;
+  document.getElementById('rb-pills').innerHTML=`
+    <span class="risk-pill pill-high">🔴 ${high} HIGH</span>
+    <span class="risk-pill pill-med">🟡 ${med} MEDIUM</span>
+    <span class="risk-pill pill-low">🟢 ${low} LOW</span>`;
+
+  // Step summary
+  const flaggedIds=new Set(flags.map(f=>f.id));
+  document.getElementById('step-summary').innerHTML=Object.entries(STEP_MAP).map(([step,ids])=>{
+    const hits=ids.filter(id=>flaggedIds.has(id));
+    const hasFlags=hits.length>0;
+    return`<div class="step-card${hasFlags?' has-flags':''}">
+      <div class="step-label">${step}</div>
+      <div class="step-name">${STEP_NAMES[step]||step}</div>
+      <div class="step-status ${hasFlags?'flagged':'ok'}">${hasFlags?`⚠ ${hits.length} flag${hits.length>1?'s':''}`:' ✔ No issues'}</div>
+    </div>`;
+  }).join('');
+
+  // Flag cards by risk level
+  const container=document.getElementById('flags-container');
+  container.innerHTML='';
+
+  ['HIGH','MEDIUM','LOW'].forEach(level=>{
+    const group=sorted.filter(f=>f.risk===level);
+    if(!group.length)return;
+    const labels={HIGH:'🔴 High Risk Flags',MEDIUM:'🟡 Medium Risk Flags',LOW:'🟢 Low Risk Flags'};
+    container.innerHTML+=`<div class="flags-section">
+      <div class="section-head"><h2>${labels[level]}</h2><span class="sh-count">${group.length} flag${group.length>1?'s':''}</span></div>
+      ${group.map(f=>`
+        <div class="flag-card ${level.toLowerCase()}">
+          <div class="fc-head ${level.toLowerCase()}">
+            <span class="fc-risk ${level.toLowerCase()}">${f.risk}</span>
+            <div class="fc-info">
+              <div class="fc-id">${f.id}</div>
+              <div class="fc-name">${f.name}</div>
+              <div class="fc-std">${f.standard}</div>
+            </div>
+            <div class="fc-matches">${f.matchCount} clause${f.matchCount>1?'s':''}</div>
+          </div>
+          <div class="fc-body">
+            <div>
+              <div class="fc-section-label">Issue</div>
+              <div class="fc-text">${f.reason}</div>
+              ${f.snippets.length?`<div class="fc-excerpts">
+                <div class="fc-section-label" style="margin-top:10px">Contract Excerpts</div>
+                ${f.snippets.map(s=>`<div class="excerpt">${esc(s)}</div>`).join('')}
+              </div>`:''}
+            </div>
+            <div>
+              <div class="fc-section-label">Guidance</div>
+              <div class="fc-text">${f.guidance}</div>
+            </div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  });
+}
+
+function esc(str){return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+// ── SAMPLE TEXT ───────────────────────────────────────────────────────────────
+function loadSample(){
+  document.getElementById('contract-text').value=`CONTENT LICENSING AND DISTRIBUTION AGREEMENT
+
+This Agreement is effective only if regulatory approval is received from the applicable broadcasting authority within 60 days of execution.
+
+1. LICENSE GRANT
+Licensor hereby grants a non-exclusive license to exhibit, stream, and distribute the Content via the Platform. This constitutes a right-of-access to the Content as it may be updated during the license period. Distributor may sub-license the Content to affiliated entities on behalf of the Licensor.
+
+2. BUNDLED SERVICES
+This Agreement covers a bundled package including: (i) content licensing; (ii) localization services; (iii) in-kind promotional services valued at USD $150,000; and (iv) a monthly license fee analytics service of USD $2,500/month.
+
+3. CONSIDERATION
+(a) Minimum Guarantee (MG) of USD $2,500,000 as an advance against royalties.
+(b) Revenue share on a per-stream basis at tiered pricing: $0.0042/stream (first 100M), $0.0035/stream thereafter, subject to escalating rates increasing 3% annually.
+(c) Milestone payments: USD $250,000 upon reaching 50M streams; $500,000 at 200M; $750,000 at 500M.
+(d) Payment Terms: Net 270 days from invoice.
+(e) Non-cash consideration: in-kind promotional services.
+
+4. ACCEPTANCE
+Revenue shall be recognized upon client acceptance following UAT and written customer sign-off.
+
+5. PRINCIPAL AND AGENT
+For third-party content, Distributor acts as agent and receives a commission on a net settlement basis. Licensor acts as principal for first-party Content.
+
+6. COMPLETION
+Licensor warrants that upon completion of post-production all Content shall meet technical specifications.
+
+7. DISCOUNT
+The total consideration reflects a package discount of approximately 12% relative to standalone selling prices.`;
+  updateCharCount();
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────────
+function exportCSV(){
+  if(!lastFlags.length)return;
+  const name=document.getElementById('contract-name').value||'Contract';
+  let csv='contract,rule_id,name,standard,risk_level,match_count,reason\n';
+  lastFlags.forEach(f=>{
+    csv+=`"${name}","${f.id}","${f.name}","${f.standard}","${f.risk}",${f.matchCount},"${f.reason.replace(/"/g,'""')}"\n`;
+  });
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='contract_revenue_flags.csv';a.click();
+}
+</script>
+</body>
+</html>

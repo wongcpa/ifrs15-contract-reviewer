@@ -1,0 +1,5 @@
+# Optional: PDF extraction for the Python CLI
+pdfplumber>=0.9.0   # local PDF text extraction — no data transmitted
+
+# Development / testing only
+pytest>=7.0
