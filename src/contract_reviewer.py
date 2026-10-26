@@ -42,7 +42,7 @@ except ImportError:
 REVENUE_RULES: List[Dict] = [
     {
         "rule_id": "IFRS15-S1-01", "name": "Contingent contract effectiveness",
-        "pattern": r"\b(subject\s+to|contingent\s+upon|conditional\s+on|effective\s+only\s+if|conditioned\s+upon|upon\s+receipt\s+of\s+regulatory)\b",
+        "pattern": r"\b(contingent\s+upon|conditional\s+(on|upon)|effective\s+only\s+if|conditioned\s+upon|upon\s+receipt\s+of\s+regulatory|subject\s+to\s+(the\s+)?(receipt\s+of\s+)?(regulatory|board|shareholder|stockholder|governmental|government)\s+approval)\b",
         "standard": "IFRS 15.9 / ASPE 3400.06", "risk_level": "HIGH",
         "flag_reason": "Contract effectiveness is contingent — may not meet IFRS 15 Step 1 criteria.",
         "guidance": "Assess all five IFRS 15.9 criteria before recognizing revenue. Defer if conditions unresolved.",
@@ -70,10 +70,11 @@ REVENUE_RULES: List[Dict] = [
     },
     {
         "rule_id": "IFRS15-S3-02", "name": "Significant financing component",
-        "pattern": r"\b(net\s+(180|270|360|365|540|720)|deferred\s+payment|payment\s+in\s+(\d+)\s+years?|long.term\s+payment|installment\s+over\s+(\d+)\s+(year|month))\b",
+        # Terms of 12 months or less fall under the IFRS 15.63 practical expedient, so only longer terms are flagged.
+        "pattern": r"\b(net\s+(36[6-9]|3[7-9]\d|[4-9]\d\d|\d{4,})|deferred\s+payment|payment\s+in\s+([2-9]|\d{2,})\s+years|long.term\s+payment|installments?\s+over\s+(1[3-9]|[2-9]\d|\d{3,})\s+months|installments?\s+over\s+([2-9]|\d{2,})\s+years)\b",
         "standard": "IFRS 15.60-65", "risk_level": "MEDIUM",
-        "flag_reason": "Extended payment terms suggest a significant financing component.",
-        "guidance": "If payment >12 months from performance, adjust transaction price using appropriate discount rate.",
+        "flag_reason": "Payment terms extend beyond 12 months — possible significant financing component.",
+        "guidance": "IFRS 15.63: no adjustment if payment is within 12 months of performance. Beyond that, assess significance and adjust the transaction price using an appropriate discount rate.",
     },
     {
         "rule_id": "IFRS15-S3-03", "name": "Non-cash consideration",

@@ -18,6 +18,9 @@ class TestStep1:
         assert flags_for("The contract is subject to board approval.","IFRS15-S1-01")
     def test_clean_no_flag(self):
         assert not flags_for("This Agreement is entered into as of January 1, 2025.","IFRS15-S1-01")
+    def test_boilerplate_subject_to_no_flag(self):
+        assert not flags_for("Subject to the terms and conditions of this Agreement, Licensor grants a license.","IFRS15-S1-01")
+        assert not flags_for("Sub-licensing is subject to prior written approval.","IFRS15-S1-01")
 
 class TestStep2:
     def test_bundled_HIGH(self):
@@ -37,9 +40,16 @@ class TestStep3:
         assert flags_for("Minimum Guarantee (MG) as advance against royalties.","IFRS15-S3-01")
     def test_milestone_payment(self):
         assert flags_for("Milestone payment of $500,000 upon reaching targets.","IFRS15-S3-01")
-    def test_net_270_MEDIUM(self):
-        flags = flags_for("Payment terms: Net 270 days from invoice.","IFRS15-S3-02")
+    def test_net_540_MEDIUM(self):
+        flags = flags_for("Payment terms: Net 540 days from invoice.","IFRS15-S3-02")
         assert flags and flags[0]["risk_level"]=="MEDIUM"
+    def test_within_12_months_practical_expedient(self):
+        # IFRS 15.63: no adjustment needed for payment within one year
+        for terms in ("Net 180 days", "Net 270 days", "Net 365 days", "installments over 12 months"):
+            assert not flags_for(f"Payment terms: {terms}.","IFRS15-S3-02"), terms
+    def test_installments_beyond_12_months(self):
+        assert flags_for("Fees are payable in installments over 18 months.","IFRS15-S3-02")
+        assert flags_for("Payment in 2 years from delivery.","IFRS15-S3-02")
     def test_net_30_no_flag(self):
         assert not flags_for("Payment terms are Net 30 days.","IFRS15-S3-02")
     def test_in_kind_MEDIUM(self):
