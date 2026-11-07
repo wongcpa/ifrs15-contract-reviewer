@@ -1,7 +1,7 @@
 """
 contract_revenue_reviewer.py
 =============================
-Contract PDF Revenue Term Extractor & IFRS 15 / ASPE 3400 Risk Reviewer
+Contract PDF Revenue Term Extractor & IFRS 15 / ASC 606 / ASPE 3400 Risk Reviewer
 
 Usage:
   python contract_revenue_reviewer.py
@@ -36,87 +36,115 @@ except ImportError:
     PDF_AVAILABLE = False
 
 # ---------------------------------------------------------------------------
-# SECTION 2: IFRS 15 & ASPE 3400 RULES
+# SECTION 2: IFRS 15, ASC 606 & ASPE 3400 RULES
 # ---------------------------------------------------------------------------
 
 REVENUE_RULES: List[Dict] = [
     {
         "rule_id": "IFRS15-S1-01", "name": "Contingent contract effectiveness",
         "pattern": r"\b(contingent\s+upon|conditional\s+(on|upon)|effective\s+only\s+if|conditioned\s+upon|upon\s+receipt\s+of\s+regulatory|subject\s+to\s+(the\s+)?(receipt\s+of\s+)?(regulatory|board|shareholder|stockholder|governmental|government)\s+approval)\b",
-        "standard": "IFRS 15.9 / ASPE 3400.06", "risk_level": "HIGH",
-        "flag_reason": "Contract effectiveness is contingent — may not meet IFRS 15 Step 1 criteria.",
-        "guidance": "Assess all five IFRS 15.9 criteria before recognizing revenue. Defer if conditions unresolved.",
+        "standard": "IFRS 15.9 / ASC 606-10-25-1 / ASPE 3400.06", "risk_level": "HIGH",
+        "flag_reason": "Contract effectiveness is contingent — may not meet the Step 1 contract criteria.",
+        "guidance": "Assess all five contract criteria (IFRS 15.9 / ASC 606-10-25-1) before recognizing revenue. Defer if conditions unresolved.",
     },
     {
         "rule_id": "IFRS15-S2-01", "name": "Bundled / multi-element arrangement",
         "pattern": r"\b(bundle[d]?|package[d]?|combined\s+offering|multi.element|integrated\s+solution|all-inclusive|combined\s+license|bundled\s+package|multiple\s+deliverables)\b",
-        "standard": "IFRS 15.22-30 / ASPE 3400.09", "risk_level": "HIGH",
+        "standard": "IFRS 15.22-30 / ASC 606-10-25-14 to 25-22 / ASPE 3400.09", "risk_level": "HIGH",
         "flag_reason": "Bundled arrangement detected — requires identification of distinct performance obligations.",
-        "guidance": "Apply IFRS 15.27 'distinct' test. Allocate transaction price using SSP for each POB.",
+        "guidance": "Apply the 'distinct' test (IFRS 15.27 / ASC 606-10-25-19). Allocate transaction price using SSP for each POB. ASC 606-10-25-16A also allows ignoring promises that are immaterial in context.",
     },
     {
-        "rule_id": "IFRS15-S2-02", "name": "Content license: right-of-access vs. right-of-use",
+        "rule_id": "IFRS15-S2-02", "name": "IP license: nature of the promise",
         "pattern": r"\b(streaming\s+rights|exclusive\s+license|non-exclusive\s+license|license\s+to\s+exhibit|broadcast\s+rights|distribution\s+rights|content\s+license|right-of-access)\b",
-        "standard": "IFRS 15.B58-B62", "risk_level": "HIGH",
-        "flag_reason": "IP license detected. Determine if right-of-access (over time) vs. right-of-use (point in time).",
-        "guidance": "Right-of-access if entity's activities significantly affect the IP. Streaming content often qualifies.",
+        "standard": "IFRS 15.B58-B62 / ASC 606-10-55-59 to 55-64", "risk_level": "HIGH",
+        "flag_reason": "IP license detected. Determine whether revenue is recognized over time (right to access) or at a point in time (right to use).",
+        "guidance": "IFRS 15: right to access if the entity's activities significantly affect the IP. ASC 606: classify the IP as functional (point in time, e.g. films, software) or symbolic (over time, e.g. brands). Finished film/TV content is usually functional IP under US GAAP, so the frameworks can diverge.",
     },
     {
         "rule_id": "IFRS15-S3-01", "name": "Variable consideration",
         "pattern": r"\b(royalt(y|ies)|usage.based|per.view|per.stream|milestone\s+payment|performance.based|earn.out|success\s+fee|revenue\s+share|minimum\s+guarantee|MG|advance\s+against\s+royalties|escalat(e|ing|or)|tiered\s+pricing)\b",
-        "standard": "IFRS 15.50-55 / ASPE 3400", "risk_level": "HIGH",
-        "flag_reason": "Variable consideration detected. Estimate and constrain where reversal is probable.",
-        "guidance": "IFRS 15.56: Include only to extent significant reversal won't occur. Apply royalty exception (B63) for sales-based royalties on IP.",
+        "standard": "IFRS 15.50-59 / ASC 606-10-32-5 to 32-14 / ASPE 3400", "risk_level": "HIGH",
+        "flag_reason": "Variable consideration detected. Estimate and apply the constraint.",
+        "guidance": "Include only to the extent a significant reversal will not occur: 'highly probable' under IFRS 15.56, 'probable' under ASC 606-10-32-11. Sales- or usage-based royalties on IP follow the royalty exception (IFRS 15.B63 / ASC 606-10-55-65).",
     },
     {
         "rule_id": "IFRS15-S3-02", "name": "Significant financing component",
-        # Terms of 12 months or less fall under the IFRS 15.63 practical expedient, so only longer terms are flagged.
+        # Terms of 12 months or less fall under the practical expedient (IFRS 15.63 / ASC 606-10-32-18), so only longer terms are flagged.
         "pattern": r"\b(net\s+(36[6-9]|3[7-9]\d|[4-9]\d\d|\d{4,})|deferred\s+payment|payment\s+in\s+([2-9]|\d{2,})\s+years|long.term\s+payment|installments?\s+over\s+(1[3-9]|[2-9]\d|\d{3,})\s+months|installments?\s+over\s+([2-9]|\d{2,})\s+years)\b",
-        "standard": "IFRS 15.60-65", "risk_level": "MEDIUM",
+        "standard": "IFRS 15.60-65 / ASC 606-10-32-15 to 32-20", "risk_level": "MEDIUM",
         "flag_reason": "Payment terms extend beyond 12 months — possible significant financing component.",
-        "guidance": "IFRS 15.63: no adjustment if payment is within 12 months of performance. Beyond that, assess significance and adjust the transaction price using an appropriate discount rate.",
+        "guidance": "No adjustment if payment is within 12 months of performance (IFRS 15.63 / ASC 606-10-32-18). Beyond that, assess significance and adjust the transaction price using an appropriate discount rate.",
     },
     {
         "rule_id": "IFRS15-S3-03", "name": "Non-cash consideration",
         "pattern": r"\b(barter|in.kind|equity\s+consideration|shares?\s+as\s+payment|non.monetary|non.cash|promotional\s+services|in-kind\s+promotional)\b",
-        "standard": "IFRS 15.66-69", "risk_level": "MEDIUM",
-        "flag_reason": "Non-cash consideration detected. Measure at fair value at contract inception.",
-        "guidance": "If fair value cannot be estimated, measure by reference to SSP of goods/services transferred.",
+        "standard": "IFRS 15.66-69 / ASC 606-10-32-21 to 32-24", "risk_level": "MEDIUM",
+        "flag_reason": "Non-cash consideration detected. Measure at fair value.",
+        "guidance": "ASC 606 measures non-cash consideration at contract inception; IFRS 15 does not specify a measurement date. If fair value cannot be estimated, measure by reference to SSP of goods/services transferred.",
     },
     {
         "rule_id": "IFRS15-S4-01", "name": "Discount on bundled contracts",
         "pattern": r"\b(discount(ed)?|reduced\s+rate|promotional\s+price|package\s+discount|bundled\s+discount|combined\s+price)\b",
-        "standard": "IFRS 15.81-83", "risk_level": "LOW",
+        "standard": "IFRS 15.81-83 / ASC 606-10-32-36 to 32-38", "risk_level": "LOW",
         "flag_reason": "Discount applied to bundled arrangement. Allocate to all POBs unless evidence of specificity.",
         "guidance": "Allocate proportionately unless observable evidence exists for allocation to a specific POB subset.",
     },
     {
         "rule_id": "IFRS15-S5-01", "name": "Over-time recognition trigger",
         "pattern": r"\b(ratable(ly)?|straight.line|pro.rat(a|ed)|as\s+services\s+are\s+rendered|continuous\s+(access|service)|subscription|monthly\s+license\s+fee)\b",
-        "standard": "IFRS 15.35", "risk_level": "LOW",
+        "standard": "IFRS 15.35 / ASC 606-10-25-27", "risk_level": "LOW",
         "flag_reason": "Over-time recognition language detected. Confirm criteria are met.",
         "guidance": "Recognize over time only if customer simultaneously receives/consumes benefits, or entity has right to payment for performance to date.",
     },
     {
         "rule_id": "IFRS15-S5-02", "name": "Acceptance / delivery condition",
         "pattern": r"\b(upon\s+acceptance|client\s+acceptance|customer\s+sign.off|final\s+acceptance|acceptance\s+testing|UAT|go.live)\b",
-        "standard": "IFRS 15.38 / ASPE 3400.07", "risk_level": "HIGH",
+        "standard": "IFRS 15.B83-B86 / ASC 606-10-55-85 to 55-88 / ASPE 3400.07", "risk_level": "HIGH",
         "flag_reason": "Formal acceptance clause detected. Revenue may be deferred until acceptance is received.",
         "guidance": "Assess whether acceptance is substantive. If yes, defer revenue until acceptance.",
     },
     {
         "rule_id": "IFRS15-B34", "name": "Principal vs. agent indicator",
         "pattern": r"\b(agent|commission|net\s+settlement|pass.through|on\s+behalf\s+of|intermediary|resell(er)?|sub.licens(e|ing)|gross\s+proceeds|net\s+proceeds)\b",
-        "standard": "IFRS 15.B34-B38", "risk_level": "HIGH",
+        "standard": "IFRS 15.B34-B38 / ASC 606-10-55-36 to 55-40", "risk_level": "HIGH",
         "flag_reason": "Principal vs. agent indicators detected. Gross vs. net revenue presentation at risk.",
         "guidance": "Determine if entity controls the good/service before transfer. Sub-licensing requires careful analysis.",
+    },
+    {
+        "rule_id": "ASC606-01", "name": "Collectibility threshold",
+        "pattern": r"\b(pay.when.paid|pay.if.paid|upon\s+collection|contingent\s+upon\s+(payment|collection)|subject\s+to\s+credit\s+approval|letter\s+of\s+credit|payment\s+guarantee)\b",
+        "standard": "ASC 606-10-25-1(e), 25-7 / IFRS 15.9(e)", "risk_level": "MEDIUM",
+        "flag_reason": "Collection-dependent or credit-support terms. Step 1 collectibility needs assessment.",
+        "guidance": "US GAAP 'probable' means likely to occur, a higher bar than IFRS 'probable' (more likely than not). If not met under ASC 606, recognize consideration received only when an ASC 606-10-25-7 event occurs (e.g. contract terminated, control transferred and collection stopped).",
+    },
+    {
+        "rule_id": "ASC606-02", "name": "License renewal or extension",
+        "pattern": r"\b(renewal\s+(term|period|option)|option\s+to\s+renew|automatically\s+renew(s|ed)?|license\s+renewal|renew(al\s+of)?\s+the\s+license|extend(s|ed)?\s+the\s+(license\s+)?term)\b",
+        "standard": "ASC 606-10-55-58C", "risk_level": "MEDIUM",
+        "flag_reason": "Renewal or extension of a license term detected.",
+        "guidance": "ASC 606: revenue for a license renewal cannot be recognized before the renewal period begins. IFRS 15 has no equivalent rule, so timing may differ between frameworks.",
+    },
+    {
+        "rule_id": "ASC606-03", "name": "Shipping and handling election",
+        "pattern": r"\b(shipping\s+and\s+handling|freight\s+(charges?|costs?)|FOB\s+(shipping\s+point|destination|origin)|shipping\s+(costs?|charges?|fees?))\b",
+        "standard": "ASC 606-10-25-18B", "risk_level": "LOW",
+        "flag_reason": "Shipping or freight terms detected.",
+        "guidance": "ASC 606 allows a policy election to treat shipping and handling after control transfers as a fulfillment cost rather than a separate performance obligation. IFRS 15 has no such election.",
+    },
+    {
+        "rule_id": "ASC606-04", "name": "Sales tax presentation election",
+        "pattern": r"\b((sales|use|excise|value.added|goods\s+and\s+services)\s+tax(es)?|VAT|GST|HST)\b",
+        "standard": "ASC 606-10-32-2A", "risk_level": "LOW",
+        "flag_reason": "Taxes collected from customers referenced.",
+        "guidance": "ASC 606 allows an election to exclude sales and similar taxes collected from customers from the transaction price. IFRS 15 requires a principal/agent assessment for each tax.",
     },
     {
         "rule_id": "ASPE3400-01", "name": "Completed-contract method indicator",
         "pattern": r"\b(upon\s+completion|on\s+completion|when\s+project\s+is\s+complete|at\s+project\s+completion|final\s+delivery\s+only)\b",
         "standard": "ASPE 3400.19", "risk_level": "MEDIUM",
         "flag_reason": "Completed-contract language. Under ASPE may indicate completed-contract method appropriate.",
-        "guidance": "ASPE 3400.19 allows completed-contract when outcome cannot be reliably estimated. IFRS 15 does not permit this method.",
+        "guidance": "ASPE 3400.19 allows completed-contract when outcome cannot be reliably estimated. Neither IFRS 15 nor ASC 606 permits this method.",
     },
 ]
 
@@ -129,6 +157,7 @@ STEP_MAP = {
     "Step 4 — Allocate Price":          ["IFRS15-S4-01"],
     "Step 5 — Recognize Revenue":       ["IFRS15-S5-01", "IFRS15-S5-02"],
     "Principal vs. Agent":              ["IFRS15-B34"],
+    "ASC 606 Considerations":           ["ASC606-01", "ASC606-02", "ASC606-03", "ASC606-04"],
     "ASPE 3400 Considerations":         ["ASPE3400-01"],
 }
 
@@ -143,7 +172,7 @@ def prompt_for_file(max_attempts: int = 3) -> str:
     """
     print("\n" + "=" * 64)
     print("  CONTRACT REVENUE RECOGNITION REVIEWER")
-    print("  Standards: IFRS 15 / ASPE 3400")
+    print("  Standards: IFRS 15 / ASC 606 / ASPE 3400")
     print("=" * 64)
 
     if not PDF_AVAILABLE:
@@ -245,7 +274,7 @@ def print_report(flags: List[Dict], contract_name: str) -> None:
     print(f"\n{div}")
     print("  CONTRACT REVENUE RECOGNITION REVIEW")
     print(f"  Contract: {contract_name}")
-    print(f"  Standards: IFRS 15 / ASPE Section 3400")
+    print(f"  Standards: IFRS 15 / ASC 606 / ASPE Section 3400")
     print(f"  Review Date: {datetime.now().strftime('%Y-%m-%d')}")
     print(f"  Flags: {len(high)} HIGH  |  {len(medium)} MEDIUM  |  {len(low)} LOW")
     print(div)
@@ -266,7 +295,7 @@ def print_report(flags: List[Dict], contract_name: str) -> None:
                 for s in flag["snippets"]:
                     print(f'    "{s}"')
 
-    print(f"\n\n  IFRS 15 FIVE-STEP COVERAGE SUMMARY")
+    print(f"\n\n  FIVE-STEP COVERAGE SUMMARY (IFRS 15 / ASC 606)")
     print("  " + "-" * 70)
     flagged_ids = {f["rule_id"] for f in flags}
     for step, rule_ids in STEP_MAP.items():
@@ -314,7 +343,7 @@ def main():
     text = extract_text(pdf_path)
     print(f"Extracted {len(text):,} characters.")
 
-    print("Reviewing against IFRS 15 and ASPE 3400 rules...")
+    print("Reviewing against IFRS 15, ASC 606 and ASPE 3400 rules...")
     flags = review_contract(text, contract_name)
 
     print_report(flags, contract_name)

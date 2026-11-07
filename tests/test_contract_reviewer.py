@@ -79,6 +79,29 @@ class TestASPE:
         flags = flags_for("Upon completion of post-production content shall be delivered.","ASPE3400-01")
         assert flags and flags[0]["risk_level"]=="MEDIUM"
 
+class TestASC606:
+    def test_collectibility_MEDIUM(self):
+        flags = flags_for("Payment to Contractor is on a pay-when-paid basis.","ASC606-01")
+        assert flags and flags[0]["risk_level"]=="MEDIUM"
+    def test_letter_of_credit(self):
+        assert flags_for("Customer shall post a letter of credit before delivery.","ASC606-01")
+    def test_license_renewal_MEDIUM(self):
+        flags = flags_for("Licensee has an option to renew for a further two years.","ASC606-02")
+        assert flags and flags[0]["risk_level"]=="MEDIUM"
+        assert flags_for("The license automatically renews each year.","ASC606-02")
+    def test_shipping_LOW(self):
+        flags = flags_for("Goods ship FOB shipping point; shipping and handling billed separately.","ASC606-03")
+        assert flags and flags[0]["risk_level"]=="LOW"
+    def test_sales_tax_LOW(self):
+        flags = flags_for("Fees exclude applicable sales taxes and GST.","ASC606-04")
+        assert flags and flags[0]["risk_level"]=="LOW"
+    def test_plain_tax_word_no_flag(self):
+        assert not flags_for("Each party bears its own income tax.","ASC606-04")
+    def test_converged_rules_cite_both_frameworks(self):
+        for r in REVENUE_RULES:
+            if r["rule_id"].startswith("IFRS15"):
+                assert "IFRS 15" in r["standard"] and "ASC 606" in r["standard"], r["rule_id"]
+
 class TestStructure:
     def test_risk_order(self):
         assert RISK_ORDER["HIGH"] < RISK_ORDER["LOW"]
