@@ -4,7 +4,7 @@
 
 Built to reflect content contract review work at an Amazon streaming subsidiary. Parses PDF contracts or pasted text to flag unusual revenue recognition terms — variable consideration, bundled arrangements, principal vs. agent, acceptance conditions, right-of-access vs. right-of-use, and significant financing components — against the five-step model under IFRS 15 and ASC 606, plus ASPE Section 3400. Converged rules cite both IFRS 15 and ASC 606 paragraphs, and separate rules flag where US GAAP differs.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-teal.svg)](LICENSE) [![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://python.org) [![Tests: pytest](https://img.shields.io/badge/Tests-pytest-green.svg)](tests/) [![100% Local](https://img.shields.io/badge/Data%20Privacy-100%25%20Local-brightgreen.svg)](#data-privacy)
+[![License: MIT](https://img.shields.io/badge/License-MIT-teal.svg)](LICENSE) [![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://python.org) [![Tests: pytest](https://img.shields.io/badge/Tests-35%20passing-green.svg)](tests/) [![100% Local](https://img.shields.io/badge/Data%20Privacy-100%25%20Local-brightgreen.svg)](#data-privacy)
 
 ---
 
